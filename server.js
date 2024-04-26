@@ -57,7 +57,7 @@ app.post('/users', async function(req, res) {
     
     const payload = { username: username };
     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: '2m' });
-    res.json({token });
+    res.json({payload , token });
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -94,7 +94,7 @@ app.put('/users/:id', authenticateToken, async function (req, res) {
 });
 
 
-app.get('/users', authenticateToken, async function(req, res) {
+app.get('/users', async function(req, res) {
   try {
     let connection = await getDBConnnection();
     let sql = "SELECT * FROM users"; 
@@ -106,6 +106,21 @@ app.get('/users', authenticateToken, async function(req, res) {
   }
 });
 
+app.get('/users/:id', async function(req, res) {
+  try {
+    const connection = await getDBConnnection();
+    let sql = "SELECT * FROM users WHERE id = ?";
+    let [results] = await connection.execute(sql, [req.params.id]);
+    connection.end(); // Stänger anslutningen till databasen när det är klart
+    if (results.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json(results[0]);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
 
 
 // Anropas med GET /gen-hash?password=kalleanka
@@ -180,13 +195,14 @@ app.get('/', (req, res) => {
   res.send(`
   <h1>Dokumentation</h1>
   <ul>
-    <li><a href="/users">/users</a><li>
-    <li><a href="/users/id">/users/id</a><li>
-    <li><a href="/users">/users</a><li>
-    <li><a href="/login">/login</a><li>
-    <li><a href="/auth-test">/auth-test</a><li>
-    
-    `)});
+    <li><a href="/users"> GET users Retunerar alla användare</a></li>
+    <li><a href="/users/id> GET users/id Visar upp information om userid:et</a></li>
+    <li><a href="/auth-test">GET auth-test Authentiserings test</a></li>
+    <li><a href="/users/id">PUT users/id Kräver token, funktion för att ändra information på en användare</a></li>
+    <li><a href="/users">POST users Funktion för att skapa en ny användare</a></li>
+    <li><a href="/login">POST login Retunerar en JWT token som bearer token. </a></li>
+  </ul>
+    `);});
 
 app.listen(port, () => {
   console.log(`Servern lyssnar på port ${port}`);
