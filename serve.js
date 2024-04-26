@@ -2,7 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const app = express();
 const port = 3000;
-const mysql = require("mysql2/promise")
+const mysql = require("mysql2/promise");
 const bcrypt = require('bcrypt');
 
 const TOKEN_SECRET = 'mySuperSecret'; 
@@ -40,6 +40,7 @@ function isValidUserData(userData) {
 
 
 app.post('/users', async function(req, res) {
+
   try {
     if (!isValidUserData(req.body)) {
       return res.status(400).json({ error: "Missing required fields" });
@@ -56,7 +57,7 @@ app.post('/users', async function(req, res) {
     
     const payload = { username: username };
     const token = jwt.sign(payload, TOKEN_SECRET, { expiresIn: '2m' });
-    res.json({ token });
+    res.json({token });
   } catch (error) {
     console.error("Error creating user:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -155,7 +156,7 @@ app.get("/auth-test", function (req, res) {
   }
   
   let token = authHeader.slice(7); // Tar bort "BEARER " som står i början på strängen.
-  console.log("token: ", token);
+  console.log(" token: ", token);
 
   let decoded;
   try {
@@ -175,7 +176,18 @@ app.get("/auth-test", function (req, res) {
   res.send(decoded); // Skickar tillbaka den avkodade, giltiga, tokenen.
 });
 
+app.get('/', (req, res) => {
+  res.send(`
+  <h1>Dokumentation</h1>
+  <ul>
+    <li><a href="/users">/users</a><li>
+    <li><a href="/users/id">/users/id</a><li>
+    <li><a href="/users">/users</a><li>
+    <li><a href="/login">/login</a><li>
+    <li><a href="/auth-test">/auth-test</a><li>
+    
+    `)});
+
 app.listen(port, () => {
   console.log(`Servern lyssnar på port ${port}`);
 });
-
